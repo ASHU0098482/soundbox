@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Ashu PayBox</string>
+    <string name="soundbox_active">SoundBox Active</string>
+    <string name="soundbox_offline">SoundBox Offline</string>
+</resources>

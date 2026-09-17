@@ -1,0 +1,28 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+
+# Keystore & Signing secrets (NEVER COMMIT)
+*.jks
+*.keystore
+keystore/
+signing.properties
+
+# Firebase Admin / Service Account secrets (NEVER COMMIT)
+service-account*.json
+tools/fcm-test-sender/service-account*.json
+tools/fcm-test-sender/node_modules/
+
+# Kotlin / OS
+*.swp
+*~
+.kotlin
