@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "771092834561",
-    "project_id": "ashu-paybox-2026",
-    "storage_bucket": "ashu-paybox-2026.appspot.com"
+    "project_number": "1068312265212",
+    "project_id": "ashu-paybox",
+    "storage_bucket": "ashu-paybox.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:771092834561:android:e9b1d03498a120cb58fa90",
+        "mobilesdk_app_id": "1:1068312265212:android:f8e0ddbb721a1acd117279",
         "android_client_info": {
           "package_name": "com.ashupaybox.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDa-placeholderKeyForAshuPayBoxLocalBuild99"
+          "current_key": "AIzaSyDovLKo3djdRbs963vqKdbj-geRWyzMTrg"
         }
       ],
       "services": {

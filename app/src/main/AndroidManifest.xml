@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
-        android:name=".PayBoxApp"
+        android:name="com.ashupaybox.PayBoxApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -27,7 +27,7 @@
         tools:targetApi="34">
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.ashupaybox.MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.AshuPayBox">
@@ -39,7 +39,7 @@
 
         <!-- Legitimate boot receiver to restore channels & schedule sync -->
         <receiver
-            android:name=".service.boot.BootCompletedReceiver"
+            android:name="com.ashupaybox.service.boot.BootCompletedReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -48,13 +48,13 @@
 
         <!-- Foreground service for reliable background sync when enabled -->
         <service
-            android:name=".service.PayBoxForegroundService"
+            android:name="com.ashupaybox.service.PayBoxForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
         <!-- PHASE_2_FIREBASE_INTEGRATION: FCM receiver placeholder -->
         <service
-            android:name=".service.fcm.PayBoxFirebaseMessagingService"
+            android:name="com.ashupaybox.service.fcm.PayBoxFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
