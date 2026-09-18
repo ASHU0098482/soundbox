@@ -45,8 +45,18 @@ android {
         applicationId = "com.ashupaybox.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1.0"
+        buildConfigField(
+            "String",
+            "PAYBOX_BACKEND_URL",
+            "\"${System.getenv("PAYBOX_BACKEND_URL") ?: localProperties.getProperty("PAYBOX_BACKEND_URL", "https://ashutech.xyz")}\""
+        )
+        buildConfigField(
+            "String",
+            "PAYBOX_DEVICE_API_KEY",
+            "\"${System.getenv("PAYBOX_DEVICE_API_KEY") ?: localProperties.getProperty("PAYBOX_DEVICE_API_KEY", "")}\""
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

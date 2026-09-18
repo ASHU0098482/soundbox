@@ -89,6 +89,15 @@ class PayBoxApp : Application() {
         // Initialize FCM token non-blockingly
         fcmTokenManager.initialize()
 
+        // Register this device with the Phase 3 backend whenever Firebase issues a token.
+        appScope.launch {
+            fcmTokenManager.fcmTokenFlow.collect { token ->
+                if (!token.isNullOrBlank()) {
+                    deviceRegistrationRepository.syncWithBackend()
+                }
+            }
+        }
+
         // Asynchronous non-blocking update check on startup
         updateManager.checkForUpdates(isManual = false)
 

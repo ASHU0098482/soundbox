@@ -185,8 +185,8 @@ fun DiagnosticScreen(
                     DiagDetailRow("FCM Status", if (fcmToken != null) "Connected & Initialized" else "Waiting for network...")
                     DiagDetailRow("Token Updated", if (tokenLastUpdated > 0) timeFormat.format(Date(tokenLastUpdated)) else "Never")
                     DiagDetailRow("Last Push Message", if (lastMessageAt > 0) timeFormat.format(Date(lastMessageAt)) else "None yet")
-                    DiagDetailRow("Backend Server Sync", "Not Connected (Phase 3 Pending)")
-                    DiagDetailRow("Razorpay Webhook", "Not Configured (Phase 3 Pending)")
+                    DiagDetailRow("Backend Server Sync", syncStatus.name.replace('_', ' '))
+                    DiagDetailRow("Razorpay Webhook", "Handled by website backend")
 
                     // Token display & Copy button
                     if (fcmToken != null) {

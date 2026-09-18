@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -25,10 +26,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.VolumeUp
@@ -64,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ashupaybox.core.util.AnnouncementFormat
 import com.ashupaybox.core.util.VoiceLanguage
+import com.ashupaybox.data.repository.BackendSyncStatus
 import com.ashupaybox.presentation.theme.AmberGold
 import com.ashupaybox.presentation.theme.EmeraldGreen
 import com.ashupaybox.presentation.theme.ErrorRed
@@ -77,8 +81,11 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val config by viewModel.config.collectAsState()
+    val backendStatus by viewModel.backendSyncStatus.collectAsState()
+    val backendLastError by viewModel.backendLastError.collectAsState()
     val context = LocalContext.current
     var showClearDialog by remember { mutableStateOf(false) }
+    var pairingCode by remember { mutableStateOf("") }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -129,6 +136,106 @@ fun SettingsScreen(
                         }
                     }
                     Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.CloudDone, contentDescription = null, tint = EmeraldGreen)
+                            Column {
+                                Text(text = "Business Connection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(text = viewModel.backendUrl, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        BackendStatusPill(backendStatus, viewModel.isBackendPaired)
+                    }
+
+                    Text(
+                        text = when {
+                            viewModel.isBackendPaired -> "This SoundBox is paired with your website backend."
+                            backendStatus == BackendSyncStatus.CONNECTING -> "Connecting to backend..."
+                            else -> "Enter pairing code from website admin to connect this device."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (!viewModel.isBackendPaired) {
+                        OutlinedTextField(
+                            value = pairingCode,
+                            onValueChange = { value -> pairingCode = value.filter { it.isDigit() }.take(6) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Pairing Code") },
+                            singleLine = true
+                        )
+                    }
+
+                    if (backendLastError.isNotBlank()) {
+                        Text(
+                            text = backendLastError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ErrorRed
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                if (viewModel.isBackendPaired) {
+                                    viewModel.syncSoundBox { success, message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    viewModel.connectSoundBox(pairingCode) { success, message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                        if (success) pairingCode = ""
+                                    }
+                                }
+                            },
+                            enabled = backendStatus != BackendSyncStatus.CONNECTING && (viewModel.isBackendPaired || pairingCode.length == 6),
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen, contentColor = Color.Black),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Link, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(if (viewModel.isBackendPaired) "Sync Now" else "Connect")
+                        }
+
+                        if (viewModel.isBackendPaired) {
+                            OutlinedButton(
+                                onClick = { viewModel.disconnectSoundBox() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Disconnect")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -429,7 +536,7 @@ fun SettingsScreen(
                     }
 
                     Text(text = "Digital Merchant Payment SoundBox", style = MaterialTheme.typography.bodyMedium)
-                    Text(text = "App Version: 1.0.0 (Phase 1)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = "App Version: 1.1.0 (Phase 3)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                     // Installation ID
                     Row(
@@ -478,6 +585,25 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun BackendStatusPill(status: BackendSyncStatus, paired: Boolean) {
+    val (text, color) = when {
+        paired && status != BackendSyncStatus.FAILED -> "PAIRED" to EmeraldGreen
+        status == BackendSyncStatus.CONNECTING -> "SYNCING" to AmberGold
+        status == BackendSyncStatus.FAILED -> "FAILED" to ErrorRed
+        status == BackendSyncStatus.PAIRING_REQUIRED -> "PAIRING" to AmberGold
+        else -> "OFFLINE" to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Box(
+        modifier = Modifier
+            .background(color.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = color)
     }
 }
 

@@ -11,6 +11,7 @@ import com.ashupaybox.core.util.AnnouncementFormat
 import com.ashupaybox.core.util.DeviceIdentifier
 import com.ashupaybox.core.util.VoiceLanguage
 import com.ashupaybox.data.repository.PaymentRepository
+import com.ashupaybox.data.repository.DeviceRegistrationRepository
 import com.ashupaybox.sound.PaymentAnnouncementManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val preferences: PayBoxPreferences,
     private val repository: PaymentRepository,
+    private val deviceRegistrationRepository: DeviceRegistrationRepository,
     private val announcementManager: PaymentAnnouncementManager,
     private val appContext: Context
 ) : ViewModel() {
@@ -33,6 +35,13 @@ class SettingsViewModel(
     val deviceId: String by lazy {
         DeviceIdentifier.getOrCreateInstallationId(appContext)
     }
+
+    val backendSyncStatus = deviceRegistrationRepository.syncStatusFlow
+    val backendLastError = deviceRegistrationRepository.lastErrorFlow
+    val backendUrl: String
+        get() = deviceRegistrationRepository.backendUrl.ifBlank { "Not configured" }
+    val isBackendPaired: Boolean
+        get() = deviceRegistrationRepository.isPaired
 
     fun setSoundBoxEnabled(enabled: Boolean) = viewModelScope.launch {
         preferences.setSoundBoxEnabled(enabled)
@@ -112,6 +121,26 @@ class SettingsViewModel(
         announcementManager.announcePhrase(phrase, currentConfig)
     }
 
+    fun connectSoundBox(pairingCode: String, onComplete: (Boolean, String) -> Unit) = viewModelScope.launch {
+        val result = deviceRegistrationRepository.syncWithBackend(pairingCode)
+        onComplete(
+            result.isSuccess,
+            result.exceptionOrNull()?.message ?: if (result.isSuccess) "SoundBox connected" else "Connection failed"
+        )
+    }
+
+    fun syncSoundBox(onComplete: (Boolean, String) -> Unit) = viewModelScope.launch {
+        val result = deviceRegistrationRepository.syncWithBackend()
+        onComplete(
+            result.isSuccess,
+            result.exceptionOrNull()?.message ?: if (result.isSuccess) "Backend synced" else "Sync failed"
+        )
+    }
+
+    fun disconnectSoundBox() {
+        deviceRegistrationRepository.disconnect()
+    }
+
     fun clearTestData(onComplete: (Int) -> Unit) = viewModelScope.launch {
         val count = repository.clearTestData()
         onComplete(count)
@@ -129,6 +158,7 @@ class SettingsViewModel(
                 return SettingsViewModel(
                     preferences = app.preferences,
                     repository = app.repository,
+                    deviceRegistrationRepository = app.deviceRegistrationRepository,
                     announcementManager = app.announcementManager,
                     appContext = app.applicationContext
                 ) as T
